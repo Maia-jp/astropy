@@ -3422,7 +3422,7 @@ reduce these to 2 dimensions using the naxis kwarg.
         return wcs_new
     
 
-    def Jac_all_world2pix(header, wcs, ra, dec, delta=1e-8):
+    def Jac_all_world2pix(self, header, wcs, ra, dec, delta=1e-8):
         """
         Calculate the Jacobian matrix for coordinate transformations using finite differences.
 
@@ -3439,7 +3439,7 @@ reduce these to 2 dimensions using the naxis kwarg.
         """
         # Get the number of points and axes
         N = len(ra)
-        NAXIS = wcs.pixel_n_dim
+        NAXIS = self.pixel_n_dim
 
         # Initialize the Jacobian matrix array
         jac_array = np.zeros((N, NAXIS, NAXIS))
@@ -3447,7 +3447,7 @@ reduce these to 2 dimensions using the naxis kwarg.
         # Loop over the points and calculate the Jacobian matrix
         for i in range(N):
             # Calculate the pixel coordinates at the current point
-            x, y = wcs.all_world2pix(ra[i], dec[i], 1)
+            x, y = self.all_world2pix(ra[i], dec[i], 1)
 
             # Initialize an identity matrix for the Jacobian matrix
             jac_matrix = np.eye(NAXIS)
@@ -3459,7 +3459,7 @@ reduce these to 2 dimensions using the naxis kwarg.
                 dec_perturbed = dec[i] + delta * (j == 1)
 
                 # Calculate the pixel coordinates with the perturbed world coordinates
-                x_perturbed, y_perturbed = wcs.all_world2pix(ra_perturbed, dec_perturbed, 1)
+                x_perturbed, y_perturbed = self.all_world2pix(ra_perturbed, dec_perturbed, 1)
 
                 # Calculate the finite difference for each axis
                 dx = (x_perturbed - x) / delta
