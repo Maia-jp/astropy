@@ -3420,6 +3420,59 @@ reduce these to 2 dimensions using the naxis kwarg.
             )
 
         return wcs_new
+    
+
+    def Jac_all_world2pix(header, wcs, ra, dec, delta=1e-8):
+        """
+        Calculate the Jacobian matrix for coordinate transformations using finite differences.
+
+        Args:
+            header (astropy.io.fits.Header): FITS header containing the WCS information.
+            wcs (astropy.wcs.WCS): World Coordinate System transformation object.
+            ra (array-like): Array of right ascension coordinates.
+            dec (array-like): Array of declination coordinates.
+            delta (float, optional): Finite difference step size. Default is 1e-8.
+
+        Returns:
+            ndarray: Array of shape (N, NAXIS, NAXIS) representing the Jacobian matrix at each point.
+
+        """
+        # Get the number of points and axes
+        N = len(ra)
+        NAXIS = wcs.pixel_n_dim
+
+        # Initialize the Jacobian matrix array
+        jac_array = np.zeros((N, NAXIS, NAXIS))
+
+        # Loop over the points and calculate the Jacobian matrix
+        for i in range(N):
+            # Calculate the pixel coordinates at the current point
+            x, y = wcs.all_world2pix(ra[i], dec[i], 1)
+
+            # Initialize an identity matrix for the Jacobian matrix
+            jac_matrix = np.eye(NAXIS)
+
+            # Calculate finite differences for each axis
+            for j in range(NAXIS):
+                # Perturb the world coordinates
+                ra_perturbed = ra[i] + delta * (j == 0)
+                dec_perturbed = dec[i] + delta * (j == 1)
+
+                # Calculate the pixel coordinates with the perturbed world coordinates
+                x_perturbed, y_perturbed = wcs.all_world2pix(ra_perturbed, dec_perturbed, 1)
+
+                # Calculate the finite difference for each axis
+                dx = (x_perturbed - x) / delta
+                dy = (y_perturbed - y) / delta
+
+                # Update the corresponding elements in the Jacobian matrix
+                jac_matrix[0, j] = dx
+                jac_matrix[1, j] = dy
+
+            # Store the Jacobian matrix in the array
+            jac_array[i] = jac_matrix
+
+        return jac_array
 
     def __getitem__(self, item):
         # "getitem" is a shortcut for self.slice; it is very limited
